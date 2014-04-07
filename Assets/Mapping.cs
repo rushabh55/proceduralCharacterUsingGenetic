@@ -56,6 +56,7 @@ public class Mapping : MonoBehaviour {
                     obj.transform.position = rayHit.point;
                     obj.transform.rotation = transform.rotation;
                     obj.AddComponent("Rigidbody");
+                    obj.rigidbody.mass = 100;
                     obj.renderer.material.shader = shader1;
                     obj.renderer.material.mainTexture = _tex;
                 }
