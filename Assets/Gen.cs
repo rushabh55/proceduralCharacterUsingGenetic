@@ -7,123 +7,161 @@ using GA;
 
 
 public class Gen : MonoBehaviour {
+    GUIStuff _stuff = new GUIStuff();
+
     System.Random rand = new System.Random();
-	public GameObject camera = null;
-    GameObject 		
-        body,
-        arm,
-        arm1,
-        leg, 
-        leg1;
 
-    int add_count, chromo_count = 0;
-
-    public GUIStyle _guiStyle;   
-
-    List<Chromosome> population = new List<Chromosome>();
-
+	public GameObject camera = null;  
+    
     public List<GameObject> _currentObjects = new List<GameObject>();
 
-    int breakForce = 100;
+    public GameObject charachter;
 
-	// Use this for initialization
-	void Start () {
-        try
-        {
-			GeneticComputations c = null;
-			try
-			{
-			c = new GeneticComputations();
-			}
-			catch(System.Exception) {}
-            c.var_dump();
-        }
+    private int totalJoints = 0;
+
+    public int _totalGenerations = 0;
+
+    GeneticComputations c = null;
+
+    private GameObject body;
+
+    public enum obstacleType
+    {
+        Cube = PrimitiveType.Cube,
+        Cylinder = PrimitiveType.Cylinder,
+        Capsule = PrimitiveType.Capsule,
+        Sphere = PrimitiveType.Sphere,
+        Quad = PrimitiveType.Quad
+    }
+    public Camera cam;
+    public obstacleType _obstacleType;
+    public Texture _tex;
+    Shader shader1;
+    // Use this for initialization
+    void Start()
+    {
+        shader1 = Shader.Find("Diffuse");
+    }
+
+	void StartDoingStuff (GameObject obj) {
+        _stuff = charachter.GetComponent<GUIStuff>();
+		try
+		{
+            c = new GeneticComputations(_totalGenerations, totalJoints);
+		}
         catch (System.Exception e_)
         {
             Debug.Log(e_.Message);
         }
-		body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        body.transform.position = new Vector3((float)GeneticComputations.bestFit.position[0], (float)GeneticComputations.bestFit.position[0], (float)GeneticComputations.bestFit.position[0]);
-        body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);
-		body.gameObject.AddComponent("Rigidbody");
 
-        arm = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        arm.transform.position = new Vector3((float)GeneticComputations.bestFit.position[1], (float)GeneticComputations.bestFit.position[1], (float)GeneticComputations.bestFit.position[1]);
-        arm.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[1], (float)GeneticComputations.bestFit.scale[1], (float)GeneticComputations.bestFit.scale[1]);
-		arm.gameObject.AddComponent("Rigidbody");
-
-        arm1 = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        arm1.transform.position = new Vector3((float)GeneticComputations.bestFit.position[2], (float)GeneticComputations.bestFit.position[2], (float)GeneticComputations.bestFit.position[2]);
-        arm1.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[2], (float)GeneticComputations.bestFit.scale[2], (float)GeneticComputations.bestFit.scale[2]);
-		arm1.gameObject.AddComponent("Rigidbody");
-
-        leg = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        leg.transform.position = new Vector3((float)GeneticComputations.bestFit.position[3], (float)GeneticComputations.bestFit.position[3], (float)GeneticComputations.bestFit.position[3]);
-        leg.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[3], (float)GeneticComputations.bestFit.scale[3], (float)GeneticComputations.bestFit.scale[3]);
-		leg.gameObject.AddComponent("Rigidbody");
-
-
-        leg1 = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        leg1.transform.position = new Vector3((float)GeneticComputations.bestFit.position[4], (float)GeneticComputations.bestFit.position[4], (float)GeneticComputations.bestFit.position[4]);
-        leg1.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[4], (float)GeneticComputations.bestFit.scale[4], (float)GeneticComputations.bestFit.scale[4]);
-		leg1.gameObject.AddComponent("Rigidbody");	
-		
-		body.AddComponent<HingeJoint>().connectedBody = leg.GetComponent<Rigidbody>();
-        body.AddComponent<HingeJoint>().connectedBody = leg1.GetComponent<Rigidbody>();
-        body.AddComponent<HingeJoint>().connectedBody = arm.GetComponent<Rigidbody>();
-        body.AddComponent<HingeJoint>().connectedBody = arm1.GetComponent<Rigidbody>();   
-
-		body.rigidbody.freezeRotation = true; 
-		body.gameObject.name = "body";
-		arm.gameObject.name 
-			= "arm";
-		arm1.gameObject.name = "arm1";
-		leg.gameObject.name = "arm1";
-		leg1.gameObject.name = "leg1";
-        _currentObjects.Add(body);
-        _currentObjects.Add(arm);
-        _currentObjects.Add(arm1);
-        _currentObjects.Add(leg);
-        _currentObjects.Add(leg1);
-
-        foreach (var obj in _currentObjects)
+        if (_currentObjects.Count > 1)
+            body.AddComponent<HingeJoint>().connectedBody = obj.GetComponent<Rigidbody>();
+        else
         {
-            obj.AddComponent("Joints");
+            body = obj;
+            body.gameObject.name = "BODY";
         }
+
+		body.rigidbody.freezeRotation = true;
+        body.gameObject.name = "obj" + totalJoints;
+        _currentObjects.Add(obj);
+        obj.AddComponent("Joints");
+        
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		camera.transform.LookAt(body.transform.position);
-        if (camera.GetComponent<SmoothFollow>().target == null)
-        {
-            camera.GetComponent<SmoothFollow>().target = body.transform;
-        }
+        if (body)
+            camera.transform.LookAt(body.transform.position);
 
-        foreach (var t in body.GetComponents<HingeJoint>())
-        {
-            t.breakTorque = breakForce;
-            t.breakForce = breakForce;
-        }
+        if(body)
+            if (camera.GetComponent<SmoothFollow>().target == null)
+            {
+                camera.GetComponent<SmoothFollow>().target = body.transform;
+            }
+
+        if (body)
+            foreach (var t in body.GetComponents<HingeJoint>())
+            {
+                t.breakTorque = _stuff.maxBreakForce;
+                t.breakForce = _stuff.maxBreakForce;
+            }
 	}
 
-    void OnGUI()
-    {        
-        if (GUI.Button(new Rect(Screen.width - 100, Screen.height - 50, 100, 50), "Reset", _guiStyle))
+    void LateUpdate()
+    {
+		GameObject body = this.body ? this.body : this.gameObject;
+        if (Input.mousePresent)
         {
-            Reset();          
+            if (Input.GetMouseButton(0))
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    RaycastHit rayHit;
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    if (Physics.Raycast(ray, out rayHit))
+                    {
+                        if (Vector3.Distance(body.transform.position, rayHit.point) < 50)
+                        {
+                            AddNewJoint(rayHit.point);
+                        }
+                        else
+                        {
+                            AddObstacle(rayHit);
+                        }
+                    }
+                }
+            }
         }
-        GUI.Label(new Rect(Screen.width - 100, 0, 100, 20), "The MAX Break Force");
-        breakForce = System.Convert.ToInt32(GUI.TextArea(new Rect(Screen.width - 100, 20, 100, 20), breakForce.ToString()));
+
+        if (Input.touchCount > 0)
+        {
+            foreach (var t in Input.touches)
+            {
+                RaycastHit rayHit;
+                Ray ray = Camera.main.ScreenPointToRay(t.position);
+                if (Physics.Raycast(ray, out rayHit))
+                {
+                    if (Vector3.Distance(body.transform.position, rayHit.point) < 50)
+                    {
+                        AddNewJoint(rayHit.point);
+                    }
+                    else
+                    {
+                        AddObstacle(rayHit);
+                    }
+                }
+            }
+        }
     }
 
+    private void AddObstacle(RaycastHit rayHit)
+    {
+        var obj = GameObject.CreatePrimitive((PrimitiveType)_obstacleType);
+        obj.transform.position = rayHit.point;
+        obj.transform.rotation = transform.rotation;
+        obj.AddComponent("Rigidbody");
+        obj.rigidbody.mass = 100;
+        obj.renderer.material.shader = shader1;
+        obj.renderer.material.mainTexture = _tex;
+    }
+
+    void AddNewJoint(Vector3 point)
+    {
+        var temp = (GameObject)GameObject.Instantiate(charachter);
+		temp.transform.position = point;
+        temp.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);
+        temp.gameObject.AddComponent("Rigidbody");
+        StartDoingStuff(temp);
+    }
+    
     public void Reset()
     {
         foreach (var obj in _currentObjects)
             GameObject.Destroy(obj);
 
         _currentObjects = new List<GameObject>();
-        Start();
+        StartDoingStuff(null);
     }
 
     void OnJointBreak(float breakForce)

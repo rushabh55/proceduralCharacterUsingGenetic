@@ -63,11 +63,4 @@ public class Mapping : MonoBehaviour {
             }
         }
 	}
-
-    void OnGUI()
-    {
-        var objs = GameObject.FindObjectsOfType(typeof(GameObject));
-        GUI.Label(new Rect(0, 0, 225, 50), "Total Objects: " + objs.Length);
-    }
-
 }
