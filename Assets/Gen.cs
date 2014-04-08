@@ -13,9 +13,11 @@ public class Gen : MonoBehaviour {
 
 	public GameObject camera = null;  
     
-    public List<GameObject> _currentObjects = new List<GameObject>();
+    private static List<GameObject> _currentObjects = new List<GameObject>();
 
-    public GameObject charachter;
+    public GameObject model;
+
+	public GameObject charachter = null;
 
     private int totalJoints = 0;
 
@@ -23,7 +25,7 @@ public class Gen : MonoBehaviour {
 
     GeneticComputations c = null;
 
-    private GameObject body;
+    private GameObject body = null;
 
     public enum obstacleType
     {
@@ -41,10 +43,15 @@ public class Gen : MonoBehaviour {
     void Start()
     {
         shader1 = Shader.Find("Diffuse");
+
     }
 
 	void StartDoingStuff (GameObject obj) {
-        _stuff = charachter.GetComponent<GUIStuff>();
+		if(obj == null)
+			return;
+		_stuff = charachter.GetComponent<GUIStuff>();
+		_totalGenerations = _stuff.totalGenerations;
+        totalJoints++;
 		try
 		{
             c = new GeneticComputations(_totalGenerations, totalJoints);
@@ -54,26 +61,28 @@ public class Gen : MonoBehaviour {
             Debug.Log(e_.Message);
         }
 
-        if (_currentObjects.Count > 1)
+        if (_currentObjects.Count >= 1 && body != null)
+        {
             body.AddComponent<HingeJoint>().connectedBody = obj.GetComponent<Rigidbody>();
+            obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1]);
+			
+			obj.gameObject.name = "obj" + totalJoints;
+        }
         else
         {
             body = obj;
             body.gameObject.name = "BODY";
-        }
+            body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);
+       		
+		}
 
-		body.rigidbody.freezeRotation = true;
-        body.gameObject.name = "obj" + totalJoints;
-        _currentObjects.Add(obj);
-        obj.AddComponent("Joints");
-        
+		obj.rigidbody.freezeRotation = true;
+		_currentObjects.Add(obj);
+        obj.AddComponent("Joints");        
 	}
 	
 	// Update is called once per frame
 	void Update () {
-        if (body)
-            camera.transform.LookAt(body.transform.position);
-
         if(body)
             if (camera.GetComponent<SmoothFollow>().target == null)
             {
@@ -86,6 +95,12 @@ public class Gen : MonoBehaviour {
                 t.breakTorque = _stuff.maxBreakForce;
                 t.breakForce = _stuff.maxBreakForce;
             }
+
+        foreach (var obj in _currentObjects)
+        {
+            if (obj.transform.position.y < -100)
+                obj.renderer.enabled = false;
+        }
 	}
 
     void LateUpdate()
@@ -101,13 +116,16 @@ public class Gen : MonoBehaviour {
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     if (Physics.Raycast(ray, out rayHit))
                     {
-                        if (Vector3.Distance(body.transform.position, rayHit.point) < 50)
+
+                        if (Vector3.Distance(body.transform.position, rayHit.point) < 10 || _currentObjects.Count < 1)
                         {
-                            AddNewJoint(rayHit.point);
+                            var t2 = rayHit.point;
+                            t2.y += 50;
+                            AddNewJoint(t2);
                         }
                         else
                         {
-                            AddObstacle(rayHit);
+                            //AddObstacle(rayHit);
                         }
                     }
                 }
@@ -124,11 +142,13 @@ public class Gen : MonoBehaviour {
                 {
                     if (Vector3.Distance(body.transform.position, rayHit.point) < 50)
                     {
-                        AddNewJoint(rayHit.point);
+                        var t2 = rayHit.point;
+                        t2.y += 50;
+                        AddNewJoint(t2);
                     }
                     else
                     {
-                        AddObstacle(rayHit);
+                       // AddObstacle(rayHit);
                     }
                 }
             }
@@ -148,9 +168,9 @@ public class Gen : MonoBehaviour {
 
     void AddNewJoint(Vector3 point)
     {
-        var temp = (GameObject)GameObject.Instantiate(charachter);
+        var temp = (GameObject)GameObject.CreatePrimitive(PrimitiveType
+		                                                  .Cube);
 		temp.transform.position = point;
-        temp.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);
         temp.gameObject.AddComponent("Rigidbody");
         StartDoingStuff(temp);
     }

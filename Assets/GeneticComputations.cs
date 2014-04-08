@@ -15,17 +15,21 @@ namespace GA
         public List<double> position = new List<double>();
         public Chromosome(int size)
         {
+			try
+			{
             for (int i = 0; i < size; i++)
             {
-                scale[i] = 1;
-                position[i] = 1;
+					scale.Add(1);
+					position.Add(1);
             }
+			}
+			catch(Exception) {}
         }
     }
 
     interface IGeneticComputations
     {
-        void getNewPopulation(int problemSize);
+        void getNewPopulation(int problemSize, bool a);
         double fitnessFuction(Chromosome c);
         void selection();
         void crossOver();
@@ -41,9 +45,10 @@ namespace GA
         private double max = double.MinValue;
         public GeneticComputations(int noOfGenerations, int problemSize)
         {
+			getNewPopulation(problemSize, true);
             for (int i = 0; i < noOfGenerations; i++)
             {
-                getNewPopulation(problemSize);
+                getNewPopulation(problemSize, false);
                 selection();
             }
             Debug.Log("Data Ready");
@@ -83,11 +88,11 @@ namespace GA
         //    }
         //}
 
-        public void getNewPopulation(int problemSize)
+        public void getNewPopulation(int problemSize, bool flag)
         {
-            if (historyPresent)
+			if (flag)
             {
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     Chromosome c = new Chromosome(problemSize);
                     for (int j = 0; j < c.scale.Count; j++)

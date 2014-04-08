@@ -32,12 +32,12 @@ public class Mapping : MonoBehaviour {
                     if (Physics.Raycast(ray, out rayHit))
                     {
 
-                        var obj = GameObject.CreatePrimitive((PrimitiveType) _obstacleType);
-                        obj.transform.position = rayHit.point;
-                        obj.transform.rotation = transform.rotation;
-                        obj.AddComponent("Rigidbody");
-                        obj.renderer.material.shader = shader1;
-                        obj.renderer.material.mainTexture = _tex;
+                        //var obj = GameObject.CreatePrimitive((PrimitiveType) _obstacleType);
+                        //obj.transform.position = rayHit.point;
+                        //obj.transform.rotation = transform.rotation;
+                        //obj.AddComponent("Rigidbody");
+                        //obj.renderer.material.shader = shader1;
+                        //obj.renderer.material.mainTexture = _tex;
                     }
                 }
             }
@@ -52,13 +52,13 @@ public class Mapping : MonoBehaviour {
                 if (Physics.Raycast(ray, out rayHit))
                 {
 
-                    var obj = GameObject.CreatePrimitive((PrimitiveType)_obstacleType);
-                    obj.transform.position = rayHit.point;
-                    obj.transform.rotation = transform.rotation;
-                    obj.AddComponent("Rigidbody");
-                    obj.rigidbody.mass = 100;
-                    obj.renderer.material.shader = shader1;
-                    obj.renderer.material.mainTexture = _tex;
+                    //var obj = GameObject.CreatePrimitive((PrimitiveType)_obstacleType);
+                    //obj.transform.position = rayHit.point;
+                    //obj.transform.rotation = transform.rotation;
+                    //obj.AddComponent("Rigidbody");
+                    //obj.rigidbody.mass = 100;
+                    //obj.renderer.material.shader = shader1;
+                    //obj.renderer.material.mainTexture = _tex;
                 }
             }
         }
