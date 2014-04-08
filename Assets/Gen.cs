@@ -63,17 +63,20 @@ public class Gen : MonoBehaviour {
 
         if (_currentObjects.Count >= 1 && body != null)
         {
-            body.AddComponent<HingeJoint>().connectedBody = obj.GetComponent<Rigidbody>();
+            var t2 = obj.transform.position;
+            t2.y -= 50;
+            obj.transform.position = t2;
+            body.AddComponent<FixedJoint>().connectedBody = obj.GetComponent<Rigidbody>();
             obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1]);
-			
+            var d = GeneticComputations.bestFit.position[totalJoints - 1];
+            obj.transform.position = new Vector3(obj.transform.position.x * (float)d, obj.transform.position.y * (float)d, obj.transform.position.z * (float)d);
 			obj.gameObject.name = "obj" + totalJoints;
         }
         else
         {
             body = obj;
             body.gameObject.name = "BODY";
-            body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);
-       		
+            body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);       		
 		}
 
 		obj.rigidbody.freezeRotation = true;
@@ -117,7 +120,7 @@ public class Gen : MonoBehaviour {
                     if (Physics.Raycast(ray, out rayHit))
                     {
 
-                        if (Vector3.Distance(body.transform.position, rayHit.point) < 10 || _currentObjects.Count < 1)
+                        if (Vector3.Distance(body.transform.position, rayHit.point) < 4 || _currentObjects.Count < 1)
                         {
                             var t2 = rayHit.point;
                             t2.y += 50;
@@ -125,7 +128,7 @@ public class Gen : MonoBehaviour {
                         }
                         else
                         {
-                            //AddObstacle(rayHit);
+                            AddObstacle(rayHit);
                         }
                     }
                 }
@@ -140,7 +143,7 @@ public class Gen : MonoBehaviour {
                 Ray ray = Camera.main.ScreenPointToRay(t.position);
                 if (Physics.Raycast(ray, out rayHit))
                 {
-                    if (Vector3.Distance(body.transform.position, rayHit.point) < 50)
+                    if (Vector3.Distance(body.transform.position, rayHit.point) < 4)
                     {
                         var t2 = rayHit.point;
                         t2.y += 50;
@@ -148,7 +151,7 @@ public class Gen : MonoBehaviour {
                     }
                     else
                     {
-                       // AddObstacle(rayHit);
+                        AddObstacle(rayHit);
                     }
                 }
             }
@@ -159,6 +162,9 @@ public class Gen : MonoBehaviour {
     {
         var obj = GameObject.CreatePrimitive((PrimitiveType)_obstacleType);
         obj.transform.position = rayHit.point;
+        var t2 = obj.transform.position;
+        t2.y += .5f;
+        obj.transform.position = t2;
         obj.transform.rotation = transform.rotation;
         obj.AddComponent("Rigidbody");
         obj.rigidbody.mass = 100;
@@ -170,6 +176,7 @@ public class Gen : MonoBehaviour {
     {
         var temp = (GameObject)GameObject.CreatePrimitive(PrimitiveType
 		                                                  .Cube);
+        temp.renderer.material.SetColor("1", Color.red);
 		temp.transform.position = point;
         temp.gameObject.AddComponent("Rigidbody");
         StartDoingStuff(temp);
