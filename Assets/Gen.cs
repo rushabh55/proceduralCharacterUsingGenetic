@@ -69,9 +69,6 @@ public class Gen : MonoBehaviour {
 
         if (_currentObjects.Count >= 1 && body != null)
         {
-			if(c == null)
-			c = new GeneticComputations(_totalGenerations, totalJoints);
-
             var t2 = obj.transform.position;
             t2.y -= 0.5f;
             obj.transform.position = t2;
