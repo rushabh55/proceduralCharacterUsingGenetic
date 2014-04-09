@@ -27,6 +27,8 @@ public class Gen : MonoBehaviour {
 
     private GameObject body = null;
 
+    public GameObject _engine;
+
     public enum obstacleType
     {
         Cube = PrimitiveType.Cube,
@@ -51,9 +53,20 @@ public class Gen : MonoBehaviour {
 		totalJoints = GameObject.FindGameObjectsWithTag("body").Length;
 	}
 
-	void StartDoingStuff (GameObject obj) {
-		if(obj == null)
-			return;
+	void StartDoingStuff (Vector3 point) {
+
+        GameObject obj = null;
+        if (body != null)
+           obj = (GameObject)GameObject.Instantiate(_engine);
+        else
+            obj = (GameObject)GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+        obj.renderer.material.SetColor("1", Color.red);
+        obj.transform.position = point;
+        obj.gameObject.AddComponent("Rigidbody");
+        obj.gameObject.tag = "body";
+
+
 		_stuff = charachter.GetComponent<GUIStuff>();
 		_totalGenerations = _stuff.totalGenerations;
         totalJoints++;
@@ -72,24 +85,50 @@ public class Gen : MonoBehaviour {
             var t2 = obj.transform.position;
             t2.y -= 0.5f;
             obj.transform.position = t2;
-            body.AddComponent<FixedJoint>().connectedBody = obj.GetComponent<Rigidbody>();
-            obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1]);
+            body.AddComponent<HingeJoint>().connectedBody = obj.GetComponent<Rigidbody>();
+
+            //obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1]);
             var d = GeneticComputations.bestFit.position[totalJoints - 1];
-            obj.transform.position = new Vector3(obj.transform.position.x * (float)d, obj.transform.position.y * (float)d, obj.transform.position.z * (float)d);
+            obj.GetComponent<ConstantForce>().force = new Vector3(0, 0, -(float)d * 100);
+            //obj.transform.position = new Vector3(obj.transform.position.x * (float)d, obj.transform.position.y * (float)d, obj.transform.position.z * (float)d);
 			obj.gameObject.name = "obj" + totalJoints;
+            obj.rigidbody.velocity = Vector3.zero;
             ReassignAll();
         }
         else
         {
             body = obj;
+            body.rigidbody.velocity = Vector3.zero;
             body.gameObject.name = "BODY";
-            body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);       		
+            //body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);       		
 		}
 
 		obj.rigidbody.freezeRotation = true;
 		_currentObjects.Add(obj);
-        obj.AddComponent("Joints");        
+        obj.AddComponent("Joints");
+        if (body)
+            cam.transform.LookAt(body.transform);
+        if (body)
+            if (camera.GetComponent<SmoothFollow>().target == null)
+            {
+                camera.GetComponent<SmoothFollow>().enabled = true;
+                camera.GetComponent<SmoothFollow>().target = body.transform;
+                camera.GetComponent<SmoothFollow>().LateUpdate();
+                camera.GetComponent<SmoothFollow>().enabled = false;
+                var w = this.transform.position;
+                w.z -= 10;
+                camera.transform.position = w;
+
+            }
 	}
+
+    void FixedUpdate()
+    {
+        foreach (var obj in GameObject.FindGameObjectsWithTag("body"))
+        {
+            obj.rigidbody.velocity = Vector3.zero;
+        }
+    }
 
     private void ReassignAll()
     {
@@ -106,13 +145,7 @@ public class Gen : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(body)
-			cam.transform.LookAt(body.transform);
-        if(body)
-            if (camera.GetComponent<SmoothFollow>().target == null)
-            {
-                camera.GetComponent<SmoothFollow>().target = body.transform;
-            }
+	
 
         if (body)
             foreach (var t in body.GetComponents<FixedJoint>())
@@ -199,13 +232,7 @@ public class Gen : MonoBehaviour {
 
     void AddNewJoint(Vector3 point)
     {
-        var temp = (GameObject)GameObject.CreatePrimitive(PrimitiveType
-		                                                  .Cube);
-        temp.renderer.material.SetColor("1", Color.red);
-		temp.transform.position = point;
-        temp.gameObject.AddComponent("Rigidbody");
-        temp.gameObject.tag = "body";
-        StartDoingStuff(temp);
+        StartDoingStuff(point);
     }
     
     public void Reset()

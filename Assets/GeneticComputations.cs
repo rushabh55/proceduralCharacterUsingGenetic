@@ -17,11 +17,11 @@ namespace GA
         {
 			try
 			{
-            for (int i = 0; i < size; i++)
-            {
-					scale.Add(double.MaxValue);
-					position.Add(double.MaxValue);
-            }
+                for (int i = 0; i < size; i++)
+                {
+					    scale.Add(double.MaxValue);
+					    position.Add(double.MaxValue);
+                }
 			}
 			catch(Exception) {}
         }
@@ -42,7 +42,7 @@ namespace GA
         private bool historyPresent = false;
         private System.Random rand = new System.Random();
         public static Chromosome bestFit = new Chromosome(10);
-        private double min = double.MaxValue;
+        private double max = double.MinValue;
         public GeneticComputations(int noOfGenerations, int problemSize)
         {
 			getNewPopulation(problemSize, true);
@@ -118,16 +118,14 @@ namespace GA
 			double bodyAverage = c.position[0] + c.scale[0];
 			bodyAverage = bodyAverage / 4;
 
-            for (int i = 1; i < c.position.Count; i++)
+            for (int i = 0; i < c.position.Count; i++)
             {
-				average += c.scale[i];
+                average += Math.Cos(c.position[i] * Math.PI);
             }
 
-            average = average / c.position.Count - 1;
-
-            if (average < min)
+            if (average > max)
             {
-                min = average;
+                max = average;
                 bestFit = c;
                 Debug.Log("Max : " + average);
             }
