@@ -19,8 +19,8 @@ namespace GA
 			{
             for (int i = 0; i < size; i++)
             {
-					scale.Add(1);
-					position.Add(1);
+					scale.Add(double.MaxValue);
+					position.Add(double.MaxValue);
             }
 			}
 			catch(Exception) {}
@@ -42,7 +42,7 @@ namespace GA
         private bool historyPresent = false;
         private System.Random rand = new System.Random();
         public static Chromosome bestFit = new Chromosome(10);
-        private double max = double.MinValue;
+        private double min = double.MaxValue;
         public GeneticComputations(int noOfGenerations, int problemSize)
         {
 			getNewPopulation(problemSize, true);
@@ -116,16 +116,18 @@ namespace GA
         {
             double average = 0;
 			double bodyAverage = c.position[0] + c.scale[0];
-			bodyAverage = bodyAverage / 2;
+			bodyAverage = bodyAverage / 4;
 
             for (int i = 1; i < c.position.Count; i++)
             {
-				average += bodyAverage + c.position[i] + c.scale[i];
+				average += c.scale[i];
             }
+
             average = average / c.position.Count - 1;
-            if (average > max)
+
+            if (average < min)
             {
-                max = average;
+                min = average;
                 bestFit = c;
                 Debug.Log("Max : " + average);
             }
@@ -147,10 +149,17 @@ namespace GA
 
         public void crossOver()
         {
+            if (population != null)
+                if (population.FirstOrDefault().scale.Count <= 2)
+                    return;
             Dictionary<Chromosome, Chromosome> crossOverData = new Dictionary<Chromosome, Chromosome>();
             for (int i = 0; i < population.Count; i += 2)
             {
-                crossOverData.Add(population[i], population[i + 1]);
+                try
+                {
+                    crossOverData.Add(population[i], population[i + 1]);
+                }
+                catch (Exception) { }
             }
 
             var _newPopulation = new List<Chromosome>();
@@ -158,45 +167,65 @@ namespace GA
             {
                 var ch2 = crossOverData[ch];
                 int pointOfCrossover = rand.Next(0, ch.scale.Count);
+                while (pointOfCrossover < 2)
+                {
+                    pointOfCrossover = rand.Next(0, ch.scale.Count);
+                }
                 var c1 = ch.scale.Skip(pointOfCrossover).ToArray();
                 var c2 = ch2.scale.Take(pointOfCrossover).ToArray();
-                for (int i = 0; i < 5; i++)
+                Debug.Log("POC " + pointOfCrossover + " size : " + ch.position.Count);
+                for (int i = 0; i < ch.position.Count; i++)
                 {
-                    if (i < pointOfCrossover)
-                        ch2.scale[i] = c1[i];
-                    else
-                        ch2.scale[i] = c2[pointOfCrossover - i];
+                    try
+                    {
+                        if (i < pointOfCrossover)
+                            ch2.scale[i] = c1[i];
+                        else
+                            ch2.scale[i] = c2[pointOfCrossover - i];
+                    }
+                    catch (Exception) { }
                 }
 
                 var c3 = ch.scale.Take(pointOfCrossover).ToArray();
                 var c4 = ch2.scale.Skip(pointOfCrossover).ToArray();
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < ch.position.Count; i++)
                 {
-                    if (i < pointOfCrossover)
-                        ch.scale[i] = c4[i];
-                    else
-                        ch.scale[i] = c3[pointOfCrossover - i];
+                    try
+                    {
+                        if (i < pointOfCrossover)
+                            ch.scale[i] = c4[i];
+                        else
+                            ch.scale[i] = c3[pointOfCrossover - i];
+                    }
+                    catch (Exception) { }
                 }
 
-                pointOfCrossover = rand.Next(0, ch.scale.Count);
                 c1 = ch.position.Skip(pointOfCrossover).ToArray();
                 c2 = ch2.position.Take(pointOfCrossover).ToArray();
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < ch.position.Count; i++)
                 {
-                    if (i < pointOfCrossover)
-                        ch2.position[i] = c1[i];
-                    else
-                        ch2.position[i] = c2[pointOfCrossover - i];
+                    try
+                    {
+                        if (i < pointOfCrossover)
+                            ch2.position[i] = c1[i];
+                        else
+                            ch2.position[i] = c2[pointOfCrossover - i];
+                    }
+                    catch (Exception) { }
                 }
 
                 c3 = ch.position.Take(pointOfCrossover).ToArray();
                 c4 = ch2.position.Skip(pointOfCrossover).ToArray();
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < ch.position.Count; i++)
                 {
-                    if (i < pointOfCrossover)
-                        ch.position[i] = c4[i];
-                    else
-                        ch.position[i] = c3[pointOfCrossover - i];
+                    try
+                    {
+                        if (i < pointOfCrossover)
+                            ch.position[i] = c4[i];
+                        else
+                            ch.position[i] = c3[pointOfCrossover - i];
+                    }
+                    catch (Exception) { }
                 }
                 _newPopulation.Add(ch);
                 _newPopulation.Add(ch2);
@@ -206,6 +235,8 @@ namespace GA
 
         public void mutation(Chromosome c)
         {
+			if(population.FirstOrDefault().scale.Count <= 2)
+				return;
             int pointOfMutation = rand.Next(0, c.position.Count);
             c.position[pointOfMutation] = rand.NextDouble();
             c.scale[pointOfMutation] = rand.NextDouble();
@@ -216,16 +247,23 @@ namespace GA
             if (population != null)
             {
                 StringBuilder sb = new StringBuilder();
-                foreach (var p in population)
-                {
-                    sb.Append("\nFor the " + p + "child");
-                    sb.Append("\nscale : ");
-                    foreach (var w in p.scale)
-                        sb.Append(" " + w + " ");
-                    sb.Append("\npopulation : ");
-                    foreach (var w in p.position)
-                        sb.Append(" " + w + " ");
-                }
+                sb.Append("Distance\n");
+                foreach (var w in bestFit.position)
+                    sb.Append(w + " ");
+                sb.Append("\nScale\n");
+                foreach (var w in bestFit.scale)
+                    sb.Append(w + " ");
+                
+                //foreach (var p in population)
+                //{
+                //    //sb.Append("\nFor the " + p + "child");
+                //    sb.Append("\nscale : ");
+                //    foreach (var w in p.scale)
+                //        sb.Append(" " + w + " ");
+                //    sb.Append("\npopulation : ");
+                //    foreach (var w in p.position)
+                //        sb.Append(" " + w + " ");
+                //}
 
                 return sb.ToString();
             }

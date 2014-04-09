@@ -43,8 +43,13 @@ public class Gen : MonoBehaviour {
     void Start()
     {
         shader1 = Shader.Find("Diffuse");
-
     }
+
+	void Awake() {
+		if(!body)
+			body = GameObject.Find("BODY");
+		totalJoints = GameObject.FindGameObjectsWithTag("body").Length;
+	}
 
 	void StartDoingStuff (GameObject obj) {
 		if(obj == null)
@@ -55,6 +60,7 @@ public class Gen : MonoBehaviour {
 		try
 		{
             c = new GeneticComputations(_totalGenerations, totalJoints);
+            
 		}
         catch (System.Exception e_)
         {
@@ -63,14 +69,18 @@ public class Gen : MonoBehaviour {
 
         if (_currentObjects.Count >= 1 && body != null)
         {
+			if(c == null)
+			c = new GeneticComputations(_totalGenerations, totalJoints);
+
             var t2 = obj.transform.position;
-            t2.y -= 50;
+            t2.y -= 0.5f;
             obj.transform.position = t2;
             body.AddComponent<FixedJoint>().connectedBody = obj.GetComponent<Rigidbody>();
             obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1]);
             var d = GeneticComputations.bestFit.position[totalJoints - 1];
             obj.transform.position = new Vector3(obj.transform.position.x * (float)d, obj.transform.position.y * (float)d, obj.transform.position.z * (float)d);
 			obj.gameObject.name = "obj" + totalJoints;
+            ReassignAll();
         }
         else
         {
@@ -83,9 +93,24 @@ public class Gen : MonoBehaviour {
 		_currentObjects.Add(obj);
         obj.AddComponent("Joints");        
 	}
+
+    private void ReassignAll()
+    {
+        body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);
+        int i = 1;
+        foreach (var obj in GameObject.FindGameObjectsWithTag("body"))
+        {
+            obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[i - 1], (float)GeneticComputations.bestFit.scale[i - 1], (float)GeneticComputations.bestFit.scale[i - 1]);
+            var d = GeneticComputations.bestFit.position[i - 1];
+            obj.transform.position = new Vector3(obj.transform.position.x * (float)d, obj.transform.position.y * (float)d, obj.transform.position.z * (float)d);
+            i++;
+        }
+    }
 	
 	// Update is called once per frame
 	void Update () {
+		if(body)
+			cam.transform.LookAt(body.transform);
         if(body)
             if (camera.GetComponent<SmoothFollow>().target == null)
             {
@@ -93,9 +118,9 @@ public class Gen : MonoBehaviour {
             }
 
         if (body)
-            foreach (var t in body.GetComponents<HingeJoint>())
+            foreach (var t in body.GetComponents<FixedJoint>())
             {
-                t.breakTorque = _stuff.maxBreakForce;
+                //t.breakTorque = _stuff.maxBreakForce;
                 t.breakForce = _stuff.maxBreakForce;
             }
 
@@ -108,6 +133,8 @@ public class Gen : MonoBehaviour {
 
     void LateUpdate()
     {
+        if (_stuff.contains)
+            return;
 		GameObject body = this.body ? this.body : this.gameObject;
         if (Input.mousePresent)
         {
@@ -123,7 +150,7 @@ public class Gen : MonoBehaviour {
                         if (Vector3.Distance(body.transform.position, rayHit.point) < 4 || _currentObjects.Count < 1)
                         {
                             var t2 = rayHit.point;
-                            t2.y += 50;
+                            t2.y += 0.5f;
                             AddNewJoint(t2);
                         }
                         else
@@ -146,7 +173,7 @@ public class Gen : MonoBehaviour {
                     if (Vector3.Distance(body.transform.position, rayHit.point) < 4)
                     {
                         var t2 = rayHit.point;
-                        t2.y += 50;
+                        t2.y += 0.5f;
                         AddNewJoint(t2);
                     }
                     else
@@ -170,6 +197,7 @@ public class Gen : MonoBehaviour {
         obj.rigidbody.mass = 100;
         obj.renderer.material.shader = shader1;
         obj.renderer.material.mainTexture = _tex;
+        obj.gameObject.tag = "Destroy";
     }
 
     void AddNewJoint(Vector3 point)
@@ -179,6 +207,7 @@ public class Gen : MonoBehaviour {
         temp.renderer.material.SetColor("1", Color.red);
 		temp.transform.position = point;
         temp.gameObject.AddComponent("Rigidbody");
+        temp.gameObject.tag = "body";
         StartDoingStuff(temp);
     }
     
@@ -187,8 +216,15 @@ public class Gen : MonoBehaviour {
         foreach (var obj in _currentObjects)
             GameObject.Destroy(obj);
 
+        foreach (var obj in GameObject.FindGameObjectsWithTag("Destroy"))
+            GameObject.Destroy(obj);
+
+        foreach (var obj in GameObject.FindGameObjectsWithTag("body"))
+            GameObject.Destroy(obj);
+
         _currentObjects = new List<GameObject>();
-        StartDoingStuff(null);
+		body = null;
+        Start();
     }
 
     void OnJointBreak(float breakForce)
