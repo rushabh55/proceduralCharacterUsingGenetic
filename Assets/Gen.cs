@@ -122,7 +122,7 @@ public class Gen : MonoBehaviour {
             catch (System.Exception) { }
         }
         Debug.Log("MASS = " + mass);
-        body.rigidbody.mass = (float)mass * 1;
+        body.rigidbody.mass = (float)mass * 3;
     }
 	
 	// Update is called once per frame
@@ -155,7 +155,7 @@ public class Gen : MonoBehaviour {
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     if (Physics.Raycast(ray, out rayHit))
                     {
-                        if (Vector3.Distance(body.transform.position, rayHit.point) < 20 || _currentObjects.Count < 1)
+                        if (Vector3.Distance(body.transform.position, rayHit.point) < 12 || _currentObjects.Count < 1)
                         {
                             var t2 = rayHit.point;
                             t2.y += 0.5f;
@@ -178,7 +178,7 @@ public class Gen : MonoBehaviour {
                 Ray ray = Camera.main.ScreenPointToRay(t.position);
                 if (Physics.Raycast(ray, out rayHit))
                 {
-                    if (Vector3.Distance(body.transform.position, rayHit.point) < 20)
+                    if (Vector3.Distance(body.transform.position, rayHit.point) < 12)
                     {
                         var t2 = rayHit.point;
                         t2.y += 0.5f;
