@@ -49,8 +49,7 @@ namespace GA
             {
                 getNewPopulation(problemSize, false);
                 selection();
-            }
-            Debug.Log("Data Ready");
+            }          
         }
 
         //private void getData()
@@ -96,10 +95,8 @@ namespace GA
                     Chromosome c = new Chromosome(problemSize);
                     for (int j = 0; j < c.mass.Count; j++)
                     { 
-                        var d = 
-                        rand.NextDouble();
-                        c.mass[j] = d;
-                        c.force[j] = 1 - d;
+                        c.mass[j] = rand.NextDouble(); 
+                        c.force[j] = rand.NextDouble(); 
                     }
                     population.Add(c);
                 }
@@ -139,7 +136,7 @@ namespace GA
         {
             var _population = population.ToArray();
             foreach (var child in _population)
-                if (fitnessFuction(child) < 1)
+                if (fitnessFuction(child) < threshold)
                 {
                     population.Remove(child);
                 }
@@ -148,6 +145,7 @@ namespace GA
 
         }
 
+        double threshold = 0;
         public void crossOver()
         {
             if (population != null)
