@@ -47,34 +47,34 @@ public class Gen : MonoBehaviour {
         shader1 = Shader.Find("Diffuse");
     }
 
-	void Awake() {
-		if(!body)
-			body = GameObject.Find("BODY");
-		totalJoints = GameObject.FindGameObjectsWithTag("body").Length;
-	}
+    void Awake()
+    {
+        if (!body)
+            body = GameObject.Find("BODY");
+        totalJoints = GameObject.FindGameObjectsWithTag("body").Length;
+    }
 
-	void StartDoingStuff (Vector3 point) {
-
+    void StartDoingStuff(Vector3 point)
+    {
+        _stuff = charachter.GetComponent<GUIStuff>();
+        _totalGenerations = _stuff.totalGenerations;
+        totalJoints++;
         GameObject obj = null;
         if (body != null)
-           obj = (GameObject)GameObject.Instantiate(_engine);
+            obj = (GameObject)GameObject.Instantiate(_engine);
         else
             obj = (GameObject)GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-        obj.renderer.material.SetColor("1", Color.red);
         obj.transform.position = point;
         obj.gameObject.AddComponent("Rigidbody");
         obj.gameObject.tag = "body";
 
 
-		_stuff = charachter.GetComponent<GUIStuff>();
-		_totalGenerations = _stuff.totalGenerations;
-        totalJoints++;
-		try
-		{
+        try
+        {
             c = new GeneticComputations(_totalGenerations, totalJoints);
-            
-		}
+
+        }
         catch (System.Exception e_)
         {
             Debug.Log(e_.Message);
@@ -82,16 +82,8 @@ public class Gen : MonoBehaviour {
 
         if (_currentObjects.Count >= 1 && body != null)
         {
-            var t2 = obj.transform.position;
-            t2.y -= 0.5f;
-            obj.transform.position = t2;
             body.AddComponent<HingeJoint>().connectedBody = obj.GetComponent<Rigidbody>();
-
-            //obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1], (float)GeneticComputations.bestFit.scale[totalJoints - 1]);
-            var d = GeneticComputations.bestFit.position[totalJoints - 1];
-            obj.GetComponent<ConstantForce>().force = new Vector3(0, 0, -(float)d * 100);
-            //obj.transform.position = new Vector3(obj.transform.position.x * (float)d, obj.transform.position.y * (float)d, obj.transform.position.z * (float)d);
-			obj.gameObject.name = "obj" + totalJoints;
+            obj.gameObject.name = "Engine " + totalJoints;
             obj.rigidbody.velocity = Vector3.zero;
             ReassignAll();
         }
@@ -100,64 +92,50 @@ public class Gen : MonoBehaviour {
             body = obj;
             body.rigidbody.velocity = Vector3.zero;
             body.gameObject.name = "BODY";
-            //body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);       		
-		}
+        }
 
-		obj.rigidbody.freezeRotation = true;
-		_currentObjects.Add(obj);
+        obj.rigidbody.freezeRotation = true;
+        _currentObjects.Add(obj);
         obj.AddComponent("Joints");
+
         if (body)
             cam.transform.LookAt(body.transform);
         if (body)
             if (camera.GetComponent<SmoothFollow>().target == null)
             {
-                camera.GetComponent<SmoothFollow>().enabled = true;
                 camera.GetComponent<SmoothFollow>().target = body.transform;
-                camera.GetComponent<SmoothFollow>().LateUpdate();
-                camera.GetComponent<SmoothFollow>().enabled = false;
-                var w = this.transform.position;
-                w.z -= 10;
-                camera.transform.position = w;
-
             }
-	}
-
-    void FixedUpdate()
-    {
-        foreach (var obj in GameObject.FindGameObjectsWithTag("body"))
-        {
-            obj.rigidbody.velocity = Vector3.zero;
-        }
     }
 
     private void ReassignAll()
     {
-        body.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0], (float)GeneticComputations.bestFit.scale[0]);
-        int i = 1;
-        foreach (var obj in GameObject.FindGameObjectsWithTag("body"))
+        double mass = 0;
+
+        for (int i = 0; i < GeneticComputations.bestFit.mass.Count; i++)
         {
-            obj.transform.localScale = new Vector3((float)GeneticComputations.bestFit.scale[i - 1], (float)GeneticComputations.bestFit.scale[i - 1], (float)GeneticComputations.bestFit.scale[i - 1]);
-            var d = GeneticComputations.bestFit.position[i - 1];
-            obj.transform.position = new Vector3(obj.transform.position.x * (float)d, obj.transform.position.y * (float)d, obj.transform.position.z * (float)d);
-            i++;
+            mass += (float)GeneticComputations.bestFit.mass[i];
+            try
+            {
+                _currentObjects[i].GetComponent<ConstantForce>().force = new Vector3(0, 0, 18 * (float)GeneticComputations.bestFit.force[i]);
+            }
+            catch (System.Exception) { }
         }
+        Debug.Log("MASS = " + mass);
+        body.rigidbody.mass = (float)mass * 10;
     }
 	
 	// Update is called once per frame
 	void Update () {
-	
-
         if (body)
             foreach (var t in body.GetComponents<FixedJoint>())
             {
-                //t.breakTorque = _stuff.maxBreakForce;
                 t.breakForce = _stuff.maxBreakForce;
             }
 
         foreach (var obj in _currentObjects)
         {
-            if (obj.transform.position.y < -100)
-                obj.renderer.enabled = false;
+            if (obj.transform.position.y < -200)
+                Reset();
         }
 	}
 

@@ -19,6 +19,7 @@ public class GUIStuff : MonoBehaviour {
     public Rect _dump;
     public bool contains = false;
 	public Gen GenScript;
+    public string _dumpData = string.Empty;
 
 	// Use this for initialization
     void Start()
@@ -55,13 +56,25 @@ public class GUIStuff : MonoBehaviour {
         GUI.Label(_genRect, "No of Genera.");
         GUI.Label(_breakRect, "Jbreak force");
 
-        var t =  GeneticComputations.var_dump() ;
-        if(t == null || t == "")
-            GUI.Label(_dump, "" );
-		else
-			GUI.Label(_dump, t);        
-
+        var t = _dumpData;
+        if (t != null)
+        {
+            t = GeneticComputations.var_dump();
+            if (t == null || t == "")
+                GUI.Label(_dump, "");
+            else
+                GUI.Label(_dump, t);
+        }
+        else
+        {
+            removeNotification();
+        }
         var objs = GameObject.FindObjectsOfType(typeof(GameObject));
         GUI.Label(new Rect(0, 0, 225, 50), "Total Objects: " + objs.Length);
+    }
+
+    private IEnumerable removeNotification()
+    {
+        yield return new WaitForSeconds(2);
     }
 }

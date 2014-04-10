@@ -11,16 +11,16 @@ namespace GA
 {    
     public class Chromosome
     {       
-        public List<double> scale = new List<double>();
-        public List<double> position = new List<double>();
+        public List<double> mass = new List<double>();
+        public List<double> force = new List<double>();
         public Chromosome(int size)
         {
 			try
 			{
                 for (int i = 0; i < size; i++)
                 {
-					    scale.Add(double.MaxValue);
-					    position.Add(double.MaxValue);
+					    mass.Add(double.MaxValue);
+					    force.Add(double.MaxValue);
                 }
 			}
 			catch(Exception) {}
@@ -39,7 +39,6 @@ namespace GA
     class GeneticComputations : IGeneticComputations
     {
         public static List<Chromosome> population = new List<Chromosome>();
-        private bool historyPresent = false;
         private System.Random rand = new System.Random();
         public static Chromosome bestFit = new Chromosome(10);
         private double max = double.MinValue;
@@ -92,16 +91,15 @@ namespace GA
         {
 			if (flag)
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     Chromosome c = new Chromosome(problemSize);
-                    for (int j = 0; j < c.scale.Count; j++)
-                    {
-                        c.scale[j] = rand.NextDouble();
-                    }
-                    for (int j = 0; j < c.position.Count; j++)
-                    {
-                        c.position[j] = rand.NextDouble();
+                    for (int j = 0; j < c.mass.Count; j++)
+                    { 
+                        var d = 
+                        rand.NextDouble();
+                        c.mass[j] = d;
+                        c.force[j] = 1 - d;
                     }
                     population.Add(c);
                 }
@@ -115,20 +113,25 @@ namespace GA
         public double fitnessFuction(Chromosome c)
         {
             double average = 0;
-			double bodyAverage = c.position[0] + c.scale[0];
-			bodyAverage = bodyAverage / 4;
-
-            for (int i = 0; i < c.position.Count; i++)
+            for (int i = 0; i < c.force.Count; i++)
             {
-                average += Math.Cos(c.position[i] * Math.PI);
-            }
+                //We want a good amount of force. 
+                average += c.force[i];
 
+                //mass is not good. 
+                average -= c.mass[i];
+            }
+            //averaging over all the values inside chromosome. 
+            average = average / c.mass.Count;
+
+            //finding the max
             if (average > max)
             {
                 max = average;
                 bestFit = c;
                 Debug.Log("Max : " + average);
             }
+
             return average;
         }
 
@@ -148,7 +151,7 @@ namespace GA
         public void crossOver()
         {
             if (population != null)
-                if (population.FirstOrDefault().scale.Count <= 2)
+                if (population.FirstOrDefault().mass.Count <= 2)
                     return;
             Dictionary<Chromosome, Chromosome> crossOverData = new Dictionary<Chromosome, Chromosome>();
             for (int i = 0; i < population.Count; i += 2)
@@ -164,64 +167,64 @@ namespace GA
             foreach (var ch in crossOverData.Keys)
             {
                 var ch2 = crossOverData[ch];
-                int pointOfCrossover = rand.Next(0, ch.scale.Count);
+                int pointOfCrossover = rand.Next(0, ch.mass.Count);
                 while (pointOfCrossover < 2)
                 {
-                    pointOfCrossover = rand.Next(0, ch.scale.Count);
+                    pointOfCrossover = rand.Next(0, ch.mass.Count);
                 }
-                var c1 = ch.scale.Skip(pointOfCrossover).ToArray();
-                var c2 = ch2.scale.Take(pointOfCrossover).ToArray();
-                Debug.Log("POC " + pointOfCrossover + " size : " + ch.position.Count);
-                for (int i = 0; i < ch.position.Count; i++)
+                var c1 = ch.mass.Skip(pointOfCrossover).ToArray();
+                var c2 = ch2.mass.Take(pointOfCrossover).ToArray();
+                Debug.Log("POC " + pointOfCrossover + " size : " + ch.force.Count);
+                for (int i = 0; i < ch.force.Count; i++)
                 {
                     try
                     {
                         if (i < pointOfCrossover)
-                            ch2.scale[i] = c1[i];
+                            ch2.mass[i] = c1[i];
                         else
-                            ch2.scale[i] = c2[pointOfCrossover - i];
+                            ch2.mass[i] = c2[pointOfCrossover - i];
                     }
                     catch (Exception) { }
                 }
 
-                var c3 = ch.scale.Take(pointOfCrossover).ToArray();
-                var c4 = ch2.scale.Skip(pointOfCrossover).ToArray();
-                for (int i = 0; i < ch.position.Count; i++)
+                var c3 = ch.mass.Take(pointOfCrossover).ToArray();
+                var c4 = ch2.mass.Skip(pointOfCrossover).ToArray();
+                for (int i = 0; i < ch.force.Count; i++)
                 {
                     try
                     {
                         if (i < pointOfCrossover)
-                            ch.scale[i] = c4[i];
+                            ch.mass[i] = c4[i];
                         else
-                            ch.scale[i] = c3[pointOfCrossover - i];
+                            ch.mass[i] = c3[pointOfCrossover - i];
                     }
                     catch (Exception) { }
                 }
 
-                c1 = ch.position.Skip(pointOfCrossover).ToArray();
-                c2 = ch2.position.Take(pointOfCrossover).ToArray();
-                for (int i = 0; i < ch.position.Count; i++)
+                c1 = ch.force.Skip(pointOfCrossover).ToArray();
+                c2 = ch2.force.Take(pointOfCrossover).ToArray();
+                for (int i = 0; i < ch.force.Count; i++)
                 {
                     try
                     {
                         if (i < pointOfCrossover)
-                            ch2.position[i] = c1[i];
+                            ch2.force[i] = c1[i];
                         else
-                            ch2.position[i] = c2[pointOfCrossover - i];
+                            ch2.force[i] = c2[pointOfCrossover - i];
                     }
                     catch (Exception) { }
                 }
 
-                c3 = ch.position.Take(pointOfCrossover).ToArray();
-                c4 = ch2.position.Skip(pointOfCrossover).ToArray();
-                for (int i = 0; i < ch.position.Count; i++)
+                c3 = ch.force.Take(pointOfCrossover).ToArray();
+                c4 = ch2.force.Skip(pointOfCrossover).ToArray();
+                for (int i = 0; i < ch.force.Count; i++)
                 {
                     try
                     {
                         if (i < pointOfCrossover)
-                            ch.position[i] = c4[i];
+                            ch.force[i] = c4[i];
                         else
-                            ch.position[i] = c3[pointOfCrossover - i];
+                            ch.force[i] = c3[pointOfCrossover - i];
                     }
                     catch (Exception) { }
                 }
@@ -233,11 +236,11 @@ namespace GA
 
         public void mutation(Chromosome c)
         {
-			if(population.FirstOrDefault().scale.Count <= 2)
+			if(population.FirstOrDefault().mass.Count <= 2)
 				return;
-            int pointOfMutation = rand.Next(0, c.position.Count);
-            c.position[pointOfMutation] = rand.NextDouble();
-            c.scale[pointOfMutation] = rand.NextDouble();
+            int pointOfMutation = rand.Next(0, c.force.Count);
+            c.force[pointOfMutation] = rand.NextDouble();
+            c.mass[pointOfMutation] = rand.NextDouble();
         }
 
         public static string var_dump()
@@ -245,21 +248,21 @@ namespace GA
             if (population != null)
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append("Distance\n");
-                foreach (var w in bestFit.position)
+                sb.Append("Force\n");
+                foreach (var w in bestFit.force)
                     sb.Append(w + " ");
-                sb.Append("\nScale\n");
-                foreach (var w in bestFit.scale)
+                sb.Append("\nmass/Fuel\n");
+                foreach (var w in bestFit.mass)
                     sb.Append(w + " ");
                 
                 //foreach (var p in population)
                 //{
                 //    //sb.Append("\nFor the " + p + "child");
-                //    sb.Append("\nscale : ");
-                //    foreach (var w in p.scale)
+                //    sb.Append("\nmass : ");
+                //    foreach (var w in p.mass)
                 //        sb.Append(" " + w + " ");
                 //    sb.Append("\npopulation : ");
-                //    foreach (var w in p.position)
+                //    foreach (var w in p.force)
                 //        sb.Append(" " + w + " ");
                 //}
 
