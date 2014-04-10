@@ -10,11 +10,13 @@ using GA;
         public Gen _gen;
         void Update()
         {
-            this.rigidbody.mass -= 0.01f;
-            if (this.rigidbody.mass < 0.1)
+            this.rigidbody.mass -= 0.001f;
+            if (this.rigidbody.mass < 0.01)
             {
                 if(this.constantForce != null)
-                this.constantForce.force = Vector3.zero;
+                    this.constantForce.force = Vector3.zero;
+                GameObject.Destroy(this);
+                Debug.Log("Destroyed");
                 this.rigidbody.mass = 1;
                 //_gen.Reset();
             }
