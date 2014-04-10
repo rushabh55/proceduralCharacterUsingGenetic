@@ -8,6 +8,18 @@ using GA;
     class Joints : MonoBehaviour 
 	{
         public Gen _gen;
+        void Update()
+        {
+            this.rigidbody.mass -= 0.01f;
+            if (this.rigidbody.mass < 0.1)
+            {
+                if(this.constantForce != null)
+                this.constantForce.force = Vector3.zero;
+                this.rigidbody.mass = 1;
+                //_gen.Reset();
+            }
+        }
+
         void OnJointBreak(float breakForce)
         {
             if (_gen == null)

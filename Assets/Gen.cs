@@ -28,6 +28,7 @@ public class Gen : MonoBehaviour {
     private GameObject body = null;
 
     public GameObject _engine;
+    public GameObject _bodyPrefab;
 
     public enum obstacleType
     {
@@ -63,7 +64,7 @@ public class Gen : MonoBehaviour {
         if (body != null)
             obj = (GameObject)GameObject.Instantiate(_engine);
         else
-            obj = (GameObject)GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obj = (GameObject)GameObject.Instantiate(_bodyPrefab);
 
         obj.transform.position = point;
         obj.gameObject.AddComponent("Rigidbody");
@@ -121,7 +122,7 @@ public class Gen : MonoBehaviour {
             catch (System.Exception) { }
         }
         Debug.Log("MASS = " + mass);
-        body.rigidbody.mass = (float)mass * 10;
+        body.rigidbody.mass = (float)mass * 1;
     }
 	
 	// Update is called once per frame
@@ -154,8 +155,7 @@ public class Gen : MonoBehaviour {
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     if (Physics.Raycast(ray, out rayHit))
                     {
-
-                        if (Vector3.Distance(body.transform.position, rayHit.point) < 4 || _currentObjects.Count < 1)
+                        if (Vector3.Distance(body.transform.position, rayHit.point) < 20 || _currentObjects.Count < 1)
                         {
                             var t2 = rayHit.point;
                             t2.y += 0.5f;
@@ -178,7 +178,7 @@ public class Gen : MonoBehaviour {
                 Ray ray = Camera.main.ScreenPointToRay(t.position);
                 if (Physics.Raycast(ray, out rayHit))
                 {
-                    if (Vector3.Distance(body.transform.position, rayHit.point) < 4)
+                    if (Vector3.Distance(body.transform.position, rayHit.point) < 20)
                     {
                         var t2 = rayHit.point;
                         t2.y += 0.5f;
